@@ -529,7 +529,8 @@ class Crypto:
                                     print(f'[DEBUG] perform_ecdh: lib version hint: {line.strip()}',
                                           file=sys.stderr)
                                     break
-                    except:
+                    except (OSError, subprocess.TimeoutExpired, subprocess.SubprocessError):
+                        # Ignore errors from version detection (non-critical debug info)
                         pass
 
                 print(f'[DEBUG] perform_ecdh: cmd = {" ".join(cmd[:9])}...', file=sys.stderr)
