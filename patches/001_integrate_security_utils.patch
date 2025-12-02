@@ -1,0 +1,74 @@
+diff --git a/src/yb/main.py b/src/yb/main.py
+index original..new 100644
+--- a/src/yb/main.py
++++ b/src/yb/main.py
+@@ -20,6 +20,7 @@ from yb.cli_remove import cli_remove
+ from yb.cli_self_test import cli_self_test
+ from yb.cli_store import cli_store
+ from yb.piv import HardwarePiv
++from yb.security_utils import InputValidator, AuditLogger
+
+ PIV_OBJECT_ID = "0x5f0001"
+ # PKCS11_LIB = "/nix/store/0makfrhmjm2b7w3abp0j77b62nkxv9d9-yubico-piv-tool-2.6.1/lib/libykcs11.so"
+@@ -72,7 +73,7 @@ def validate_management_key(key: str) -> str:
+         click.ClickException: If key is invalid
+     """
+-    # Remove spaces and dashes for user convenience
+-    key = key.replace(' ', '').replace('-', '').lower()
++    # Use centralized validation
++    return InputValidator.validate_management_key(key)
+-
+-    # Check if it's valid hex
+-    try:
+-        bytes.fromhex(key)
+-    except ValueError:
+-        raise click.ClickException(
+-            'Management key must be a hex string (0-9, a-f)'
+-        )
+-
+-    # Check length (24 bytes = 48 hex chars for 3DES)
+-    if len(key) != 48:
+-        raise click.ClickException(
+-            f'Management key must be 48 hex characters (24 bytes), got {len(key)}'
+-        )
+-
+-    return key
+
+
+ # === Main CLI =================================================================
+@@ -204,7 +188,10 @@ def cli(
+     # Select reader by serial number
+     if serial is not None:
+         try:
++            # Validate serial number
++            serial = InputValidator.validate_serial_number(serial)
+             chosen_reader = piv.get_reader_for_serial(serial)
++            chosen_reader = InputValidator.validate_reader_name(chosen_reader)
+         except ValueError as e:
+             raise click.ClickException(str(e)) from e
+         except RuntimeError as e:
+@@ -213,6 +200,7 @@ def cli(
+     # Select reader by PC/SC name (legacy)
+     elif reader is not None:
+         chosen_reader = reader
++        chosen_reader = InputValidator.validate_reader_name(chosen_reader)
+
+     # Auto-select if only one device, refuse if multiple
+     else:
+@@ -226,6 +214,7 @@ def cli(
+                 serial_num, version, chosen_reader = devices[0]
+                 print(
+                     f'Using YubiKey {serial_num} (version {version})',
+                     file=sys.stderr
+                 )
++                chosen_reader = InputValidator.validate_reader_name(chosen_reader)
+             else:
+                 # Multiple devices detected
+@@ -244,6 +233,7 @@ def cli(
+
+                         # Get reader for selected serial
+                         chosen_reader = piv.get_reader_for_serial(selected_serial)
++                        chosen_reader = InputValidator.validate_reader_name(chosen_reader)
+                         print(
+                             f'\nSelected YubiKey {selected_serial}',
+                             file=sys.stderr

@@ -8,13 +8,25 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "yb"
-version = "0.1.0"
+version = "0.2.0"
 description = "A mini protected object store on a YubiKey device"
 authors = [{ name = "Frederic Ruget", email = "fred@atlant.com" }]
 dependencies = [
-  "click",
-  "PyYAML",
-  "cryptography"
+  "click>=8.1.0,<9.0.0",
+  "PyYAML>=6.0.1,<7.0.0",
+  "cryptography>=42.0.0,<43.0.0"
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.0.0,<9.0.0",
+  "pytest-cov>=4.1.0,<5.0.0",
+  "bandit>=1.7.5,<2.0.0",
+  "safety>=3.0.0,<4.0.0",
+]
+hardware = [
+  "yubikey-manager>=5.0.0,<6.0.0",
+  "pyscard>=2.0.0,<3.0.0",
 ]
 
 [project.scripts]
